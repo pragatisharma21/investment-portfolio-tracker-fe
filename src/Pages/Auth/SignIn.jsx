@@ -6,26 +6,45 @@ import { GoogleLogin } from '@react-oauth/google'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'
-import { useLogin } from '@/hooks/use-user-login'
-import { useGoogleSignup } from '@/hooks/use-user-google-login'
+import { useLogin } from "@/hooks/use-user-login"
+import { useAuth } from "@/Context/AuthProvider"
+import AccountService from '@/Api/Account.service'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const { login, user } = useAuth()
   const navigate = useNavigate()
 
-  const { mutate: loginMutation, isPending: isLoading } = useLogin()
-  const googleLoginMutation = useGoogleSignup()
+  if (user?.token) {
+    navigate('/dashboard')
+  }
 
   const handleGoogleLogin = async (response) => {
     const googleToken = response?.credential
-    googleLoginMutation.mutate(googleToken, {
-      onSuccess: () => navigate('/dashboard'),
-    })
+    if (!googleToken) {
+      toast.error('Google login failed. No token received.')
+      return
+    }
+    try {
+      const res = await AccountService.googleSignupUser(googleToken)
+      if (res.status === 201 || res.status === 200) {
+        toast.success(`${res.status === 201 ? 'Signup' : 'Login'} Successfully`)
+        login(res.data.token, res.data.id)
+        navigate('/dashboard')
+      } else {
+        toast.error('Google login failed. Please try again.')
+      }
+    } catch (err) {
+      toast.error('Google login failed. Please try again.')
+      console.error('Google Login Error:', err)
+    }
   }
 
-  const handleLogin = async (e) => {
+  const { mutate: loginMutation, isPending: isLoading } = useLogin()
+
+  const handleLogin = (e) => {
     e.preventDefault()
     if (!email || !password) {
       toast.error('Please enter email and password')
@@ -69,15 +88,11 @@ export default function SignIn() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-3 flex items-center text-gray-500"
               >
-                {showPassword ? (
-                  <AiOutlineEyeInvisible size={20} />
-                ) : (
-                  <AiOutlineEye size={20} />
-                )}
+                {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
               </button>
             </div>
             <Button type="submit" className="w-full">
-              {isLoading ? 'Loggin in...' : 'Login'}
+              {isLoading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
           <div className="text-center mt-4">

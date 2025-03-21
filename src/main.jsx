@@ -8,7 +8,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import { StrictMode } from 'react'
 import { AuthProvider } from './Context/AuthProvider'
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENTID
+const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENTID
 
 const queryClient = new QueryClient()
 
@@ -17,7 +17,7 @@ createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <AuthProvider>
         <ThemeProvider>
-          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+          <GoogleOAuthProvider clientId={CLIENT_ID}>
             <QueryClientProvider client={queryClient}>
               <App />
             </QueryClientProvider>

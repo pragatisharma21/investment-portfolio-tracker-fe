@@ -1,66 +1,76 @@
-import { useState } from 'react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { GoogleLogin } from '@react-oauth/google'
-import { Link, useNavigate } from 'react-router-dom'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Label } from '@/components/ui/label'
-import { FaCamera } from 'react-icons/fa'
-import { toast } from 'react-toastify'
-import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'
-import { useUserProfile } from '@/hooks/use-user-profile'
-import { useGoogleSignup } from '@/hooks/use-user-google-login'
-import { useSignup } from '@/hooks/use-user-signup'
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GoogleLogin } from "@react-oauth/google";
+import { Link, useNavigate } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Label } from "@/components/ui/label";
+import { FaCamera } from "react-icons/fa";
+import { toast } from "react-toastify";
+import { useAuth } from "@/Context/AuthProvider";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import AccountService from "@/Api/Account.service";
 
-export default function SignUp() {
-  const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [profileImage, setProfileImage] = useState(null)
-  const [previewImage, setPreviewImage] = useState('/placeholder-user.jpg')
+export default function SignUpPage() {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState("/placeholder-user.jpg");
 
-  const { data: user } = useUserProfile()
+  const { login, user } = useAuth();
 
-  const navigate = useNavigate()
-  const googleLoginMutation = useGoogleSignup()
-  const signupMutation = useSignup()
+  const navigate = useNavigate();
 
-  if (user) {
-    navigate('/dashboard')
+  if (user?.token) {
+    navigate("/dashboard");
   }
-
   const handleGoogleLogin = async (response) => {
-    const googleToken = response?.credential
+    const googleToken = response?.credential;
 
-    googleLoginMutation.mutate(googleToken, {
-      onSuccess: () => navigate('/dashboard'),
-    })
-  }
+    try {
+      const res = await AccountService.googleSingnupUser(googleToken);
+      if (res.status === 201 || res.status === 200) {
+        toast.success(
+          `${res.status === 201 ? " Signup" : "Login"} Successfully`
+        );
+      }
+      login(res.data);
+    } catch (err) {
+      console.log(err.message);
+    }
+  };
 
   const handleImageUpload = (event) => {
-    const file = event.target.files[0]
+    const file = event.target.files[0];
     if (file) {
-      setProfileImage(file)
-      setPreviewImage(URL.createObjectURL(file))
+      setProfileImage(file);
+      setPreviewImage(URL.createObjectURL(file));
     }
-  }
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    const formData = new FormData()
-    formData.append('name', username)
-    formData.append('email', email)
-    formData.append('password', password)
+    const formData = new FormData();
+    formData.append("name", username);
+    formData.append("email", email);
+    formData.append("password", password);
 
     if (profileImage) {
-      formData.append('profileImage', profileImage)
+      formData.append("profileImage", profileImage);
     }
 
-    signupMutation.mutate(formData)
-  }
+    const res = await AccountService.signupUser(formData);
+
+    if (res.status === 201 || res.status === 200) {
+      console.log(res.status);
+      toast.success("Signup Successfully");
+      navigate("/sign-in");
+    }
+  };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-background">
@@ -72,7 +82,7 @@ export default function SignUp() {
           <div className="flex justify-center py-4">
             <GoogleLogin
               onSuccess={handleGoogleLogin}
-              onError={() => toast.error('Google login failed')}
+              onError={() => toast.error("Google login failed")}
             />
           </div>
           <div className="flex justify-center items-center flex-col mb-4">
@@ -80,8 +90,8 @@ export default function SignUp() {
               <Avatar className="h-24 w-24 border-2 border-gray-300">
                 <AvatarImage src={previewImage} />
                 <AvatarFallback>
-                  {' '}
-                  <FaCamera className="text-2xl" />{' '}
+                  {" "}
+                  <FaCamera className="text-2xl" />{" "}
                 </AvatarFallback>
               </Avatar>
             </Label>
@@ -110,7 +120,7 @@ export default function SignUp() {
             />
             <div className="relative">
               <Input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -133,14 +143,17 @@ export default function SignUp() {
           </form>
           <div className="text-center mt-4">
             <p>
-              Already have an account?{' '}
-              <Link to={'/sign-in'} className="text-blue-500">
+              Already have an account?{" "}
+              <Link to={"/sign-in"} className="text-blue-500">
                 Sign In
               </Link>
             </p>
           </div>
         </CardContent>
       </Card>
+      <Link to={"/"} className="absolute top-4 left-4">
+        <img className="w-10 h-10" src="/logo.png" alt="Logo" />
+      </Link>
     </div>
-  )
+  );
 }
