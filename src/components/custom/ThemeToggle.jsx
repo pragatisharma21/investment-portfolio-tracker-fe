@@ -1,4 +1,4 @@
-import { useTheme } from '@/context/ThemeProvider'
+import { useTheme } from '../../Context/ThemeProvider'
 import { FiMoon, FiSun } from 'react-icons/fi'
 
 const ThemeToggle = ({ text = '' }) => {
