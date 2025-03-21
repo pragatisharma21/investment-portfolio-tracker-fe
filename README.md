@@ -82,15 +82,12 @@ Develop a sleek and responsive investment portfolio tracker where users can add 
 
 ---
 
-## Team Credits
-**Development Team**: 
-- Developer 1
-- Developer 2
-- Developer 3
+## INDIVIDUAL PROJECT
+
 
 ---
 
-## What We Learned
+## What I Learned
 - Implementing **real-time data fetching** from financial APIs.
 - Creating **interactive and responsive dashboards** using Recharts.
 - Developing a **modular and customizable UI** for better user experience.
